@@ -279,6 +279,33 @@ pub unsafe fn sys_lstat(path: *const c_char, buf: *mut ctypes::stat) -> ctypes::
     })
 }
 
+/// Get the metadata of the file relative to `dirfd` and write into `buf`.
+///
+/// Return 0 if success.
+pub unsafe fn sys_fstatat(dirfd: c_int, path: *const c_char, buf: *mut ctypes::stat) -> c_int {
+    let Ok(path) = char_ptr_to_str(path) else {
+        return -1;
+    };
+    debug!("sys_fstatat <= {} {:?} {:#x}", dirfd, path, buf as usize);
+
+    if path.starts_with('/') || dirfd == AT_FDCWD as _ {
+        return unsafe { sys_stat(path.as_ptr() as _, buf) };
+    }
+
+    syscall_body!(sys_fstatat, {
+        if buf.is_null() {
+            return Err(LinuxError::EFAULT);
+        }
+
+        let dir = Directory::from_fd(dirfd)?;
+        let file = dir.inner.lock().open_file_at(path, &OpenOptions::new())?;
+        let file = File::new(file, path.to_string());
+        unsafe { *buf = file.stat()? };
+
+        Ok(0)
+    })
+}
+
 /// Get the path of the current directory.
 pub fn sys_getcwd(buf: *mut c_char, size: usize) -> *mut c_char {
     debug!("sys_getcwd <= {:#x} {}", buf as usize, size);
