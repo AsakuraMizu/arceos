@@ -2,7 +2,11 @@
 //!
 //! TODO: it doesn't work very well if the mount points have containment relationships.
 
-use alloc::{string::String, sync::Arc, vec::Vec};
+use alloc::{
+    string::{String, ToString},
+    sync::Arc,
+    vec::Vec,
+};
 use axerrno::{AxError, AxResult, ax_err};
 use axfs_vfs::{VfsNodeAttr, VfsNodeOps, VfsNodeRef, VfsNodeType, VfsOps, VfsResult};
 use axns::{ResArc, def_resource};
@@ -36,7 +40,7 @@ impl CURRENT_DIR {
 }
 
 struct MountPoint {
-    path: &'static str,
+    path: String,
     fs: Arc<dyn VfsOps>,
 }
 
@@ -48,7 +52,7 @@ struct RootDirectory {
 static ROOT_DIR: LazyInit<Arc<RootDirectory>> = LazyInit::new();
 
 impl MountPoint {
-    pub fn new(path: &'static str, fs: Arc<dyn VfsOps>) -> Self {
+    pub fn new(path: String, fs: Arc<dyn VfsOps>) -> Self {
         Self { path, fs }
     }
 }
@@ -67,7 +71,7 @@ impl RootDirectory {
         }
     }
 
-    pub fn mount(&self, path: &'static str, fs: Arc<dyn VfsOps>) -> AxResult {
+    pub fn mount(&self, path: &str, fs: Arc<dyn VfsOps>) -> AxResult {
         if path == "/" {
             return ax_err!(InvalidInput, "cannot mount root filesystem");
         }
@@ -78,14 +82,27 @@ impl RootDirectory {
             return ax_err!(InvalidInput, "mount point already exists");
         }
         // create the mount point in the main filesystem if it does not exist
-        self.main_fs.root_dir().create(path, FileType::Dir)?;
-        fs.mount(path, self.main_fs.root_dir().lookup(path)?)?;
-        self.mounts.write().push(MountPoint::new(path, fs));
+        self.main_fs.root_dir().create(&path, FileType::Dir)?;
+        fs.mount(&path, self.main_fs.root_dir().lookup(&path)?)?;
+        self.mounts
+            .write()
+            .push(MountPoint::new(path.to_string(), fs));
         Ok(())
     }
 
-    pub fn _umount(&self, path: &str) {
+    pub fn umount(&self, path: &str) -> AxResult {
+        if path == "/" {
+            return ax_err!(InvalidInput, "cannot umount root filesystem");
+        }
+        if !path.starts_with('/') {
+            return ax_err!(InvalidInput, "mount path must start with '/'");
+        }
+        if !self.mounts.read().iter().any(|mp| mp.path == path) {
+            return ax_err!(InvalidInput, "mount point does not exist");
+        }
+
         self.mounts.write().retain(|mp| mp.path != path);
+        Ok(())
     }
 
     pub fn contains(&self, path: &str) -> bool {
@@ -335,4 +352,14 @@ pub(crate) fn rename(old: &str, new: &str) -> AxResult {
         remove_file(None, new)?;
     }
     parent_node_of(None, old).rename(old, new)
+}
+
+pub(crate) fn mount(_source: &str, target: &str, _fs: &str) -> AxResult {
+    let abs_path = absolute_path(target)?;
+    ROOT_DIR.mount(&abs_path, mounts::ramfs())
+}
+
+pub(crate) fn umount(path: &str) -> AxResult {
+    let abs_path = absolute_path(path)?;
+    ROOT_DIR.umount(&abs_path)
 }
