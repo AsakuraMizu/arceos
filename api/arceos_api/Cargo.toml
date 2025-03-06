@@ -27,8 +27,8 @@ myfs = ["axfeat/myfs"]
 dummy-if-not-enabled = []
 
 [dependencies]
-axio = "0.1"
-axerrno = "0.1"
+axio = { workspace = true }
+axerrno = { workspace = true }
 axfeat = { workspace = true }
 axruntime = { workspace = true }
 axconfig = { workspace = true }

@@ -65,8 +65,21 @@ axsync = { path = "modules/axsync" }
 axtask = { path = "modules/axtask" }
 axdma = { path = "modules/axdma" }
 
+axerrno = "0.1"
+axio = "0.1"
+cfg-if = "1.0"
+chrono = { version = "0.4", default-features = false }
+crate_interface = "0.1"
+kernel_guard = "0.1"
+kspin = "0.1"
+lazyinit = "0.2"
+log = "=0.4.21"
+memory_addr = "0.3"
+percpu = "0.2"
+static_assertions = "1.1.0"
+
 [patch.crates-io]
-page_table_multiarch = { git = "https://github.com/oscomp/page_table_multiarch.git", rev = "c8a13b0"}
+page_table_multiarch = { git = "https://github.com/oscomp/page_table_multiarch.git", rev = "c8a13b0" }
 page_table_entry = { git = "https://github.com/oscomp/page_table_multiarch.git", rev = "c8a13b0" }
 
 [profile.release]
