@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use axio::{Result, SeekFrom, prelude::*};
 use core::fmt;
 
@@ -173,6 +174,14 @@ impl File {
 impl Read for File {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
         self.inner.read(buf)
+    }
+
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> Result<usize> {
+        axio::default_read_to_end(
+            self,
+            buf,
+            self.inner.get_attr().ok().map(|attr| attr.size() as _),
+        )
     }
 }
 
