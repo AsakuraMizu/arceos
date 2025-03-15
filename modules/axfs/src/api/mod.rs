@@ -92,3 +92,12 @@ pub fn rename(old: &str, new: &str) -> io::Result<()> {
 pub fn absolute_path_exists(path: &str) -> bool {
     crate::root::lookup(None, path).is_ok()
 }
+
+pub fn mount(source: &str, target: &str, fs: &str) -> io::Result<()> {
+    crate::root::mount(source, target, fs)
+}
+
+/// Remove the attachment of the filesystem mounted on the specified path.
+pub fn umount(path: &str) -> io::Result<()> {
+    crate::root::umount(path)
+}
