@@ -5,7 +5,7 @@ fn main() {
         let allow_types = ["tm", "jmp_buf"];
         let mut builder = bindgen::Builder::default()
             .header(in_file)
-            .clang_arg("-I./include")
+            .clang_arg("-I../../api/arceos_posix_api/include")
             .derive_default(true)
             .size_t_is_usize(false)
             .use_core();

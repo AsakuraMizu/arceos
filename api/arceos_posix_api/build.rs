@@ -83,7 +83,7 @@ typedef struct {{
 
         let mut builder = bindgen::Builder::default()
             .header(in_file)
-            .clang_arg("-I./../../ulib/axlibc/include")
+            .clang_arg("-I./include")
             .parse_callbacks(Box::new(MyCallbacks))
             .derive_default(true)
             .size_t_is_usize(false)
@@ -102,6 +102,6 @@ typedef struct {{
             .expect("Couldn't write bindings!");
     }
 
-    gen_pthread_mutex("../../ulib/axlibc/include/ax_pthread_mutex.h").unwrap();
+    gen_pthread_mutex("include/ax_pthread_mutex.h").unwrap();
     gen_c_to_rust_bindings("ctypes.h", "src/ctypes_gen.rs");
 }
